@@ -1,5 +1,5 @@
 generate-dbstruct:
-  dbHost : 10.107.224.23
+  dbHost : somehostt
   dbPort : 3306
   dbName : somedbname
   dbUser : someuser
