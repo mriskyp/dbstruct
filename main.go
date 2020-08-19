@@ -22,17 +22,25 @@ const (
 
 	mysqlType    = "mysql"
 	postgresType = "postgres"
+
+	indexMapGenerate = "generate-dbstruct"
 )
 
 func main() {
 
 	cfg, err := generateFromYml()
 	if err != nil {
+		fmt.Printf("error generate schema from yml. err: %+v", err)
 		panic(err)
 	}
 
 	fmt.Printf("\n data cfg %+v \n", cfg)
-	initializeDB(cfg.DBType, cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.TableName)
+	err = initializeDB(cfg)
+	if err != nil {
+		fmt.Printf("error generate struct. err: %+v", err)
+	} else {
+		fmt.Printf("success generate struct")
+	}
 }
 
 func generateFromYml() (*model.Config, error) {
@@ -50,38 +58,51 @@ func generateFromYml() (*model.Config, error) {
 		log.Fatalln(err)
 	}
 
-	configData := mapConfig["generate-dbstruct"]
+	configData := mapConfig[indexMapGenerate]
 
 	// return data config
 	return &configData, nil
 }
 
-func initializeDB(dbType, host, port, user, password, dbname, tableName string) {
+func initializeDB(cfg *model.Config) error {
 	// initialize db
 	var db *sql.DB
+	var err error
 
-	if dbType == postgresType {
+	if cfg == nil {
+		err = errors.New("no valid config found")
+		return err
+	}
+
+	isOpenDB := false
+	if cfg.DBType == postgresType {
 		psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
-			host, port, user, password, dbname)
+			cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName)
 		dbPsql, err := sql.Open(postgresType, psqlInfo)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		db = dbPsql
+		isOpenDB = true
 	}
 
-	if dbType == mysqlType {
-		dbMysql, err := sql.Open(mysqlType, user+":"+password+"@tcp("+host+":"+port+")/"+dbname)
+	if cfg.DBType == mysqlType {
+		dbMysql, err := sql.Open(mysqlType, cfg.DBUser+":"+cfg.DBPassword+"@tcp("+cfg.DBHost+":"+cfg.DBPort+")/"+cfg.DBName)
 		if err != nil {
-			panic(err)
+			return err
 		}
+		isOpenDB = true
 		db = dbMysql
 	}
+	if !isOpenDB {
+		return errors.New("error proceed struct due db is not open")
+	}
+
 	defer db.Close()
 
-	err := db.Ping()
+	err = db.Ping()
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	fmt.Println("Successfully connected!")
@@ -89,10 +110,15 @@ func initializeDB(dbType, host, port, user, password, dbname, tableName string) 
 	var totalElapsedTime time.Duration
 	start := time.Now()
 
+	if cfg.TableName == "" {
+		err = errors.New("invalid table name yml. table name required")
+		return err
+	}
+
 	rows, err := db.Query(`SELECT column_name , ordinal_position ,is_nullable ,data_type, column_type 
 	FROM INFORMATION_SCHEMA.COLUMNS 
 	WHERE TABLE_NAME like ? ;
-	`, tableName)
+	`, cfg.TableName)
 
 	if err != nil {
 		// handle this error better than this
@@ -115,7 +141,7 @@ func initializeDB(dbType, host, port, user, password, dbname, tableName string) 
 		err = rows.Scan(&columnName, &ordinalPosition, &isNullable, &dataType, &columnType)
 		if err != nil {
 			// handle this error
-			panic(err)
+			return err
 		}
 		if isNullable == "YES" {
 			isNull = true
@@ -216,4 +242,5 @@ func initializeDB(dbType, host, port, user, password, dbname, tableName string) 
 	totalElapsedTime += elapsed
 	fmt.Println("\n query processing time %s \n", elapsed)
 
+	return nil
 }
