@@ -18,12 +18,6 @@ const (
 
 	mysqlType    = "mysql"
 	postgresType = "postgres"
-
-	dbExpression = `SELECT column_name , ordinal_position ,is_nullable ,data_type, column_type 
-	FROM INFORMATION_SCHEMA.COLUMNS 
-	WHERE TABLE_NAME like ? ;
-	`
-	preparePsql = "host=%s port=%d user=%s " + "password=%s dbname=%s sslmode=disable"
 )
 
 func main() {
@@ -33,7 +27,7 @@ func main() {
 	dbUser := "administrator"
 	dbPassword := "T3ch*123*mysqlstaging*tw0"
 	dbType := "mysql"
-	tableName := "tableName"
+	tableName := "customers"
 
 	initializeDB(dbType, dbHost, dbPort, dbUser, dbPassword, dbName, tableName)
 }
@@ -43,21 +37,21 @@ func initializeDB(dbType, host, port, user, password, dbname, tableName string) 
 	var db *sql.DB
 
 	if dbType == postgresType {
-		psqlInfo := fmt.Sprintf(preparePsql,
+		psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
 			host, port, user, password, dbname)
-		dbMysql, err := sql.Open(postgresType, psqlInfo)
+		dbPsql, err := sql.Open(postgresType, psqlInfo)
+		if err != nil {
+			panic(err)
+		}
+		db = dbPsql
+	}
+
+	if dbType == mysqlType {
+		dbMysql, err := sql.Open(mysqlType, user+":"+password+"@tcp("+host+":"+port+")/"+dbname)
 		if err != nil {
 			panic(err)
 		}
 		db = dbMysql
-	}
-
-	if dbType == mysqlType {
-		dbPostgres, err := sql.Open(mysqlType, user+":"+password+"@tcp("+host+":"+port+")/"+dbname)
-		if err != nil {
-			panic(err)
-		}
-		db = dbPostgres
 	}
 	defer db.Close()
 
@@ -71,12 +65,10 @@ func initializeDB(dbType, host, port, user, password, dbname, tableName string) 
 	var totalElapsedTime time.Duration
 	start := time.Now()
 
-	rows, err := db.Query(dbExpression, tableName)
-
-	elapsed := time.Since(start)
-
-	totalElapsedTime += elapsed
-	fmt.Println("\n query processing time %s \n", elapsed)
+	rows, err := db.Query(`SELECT column_name , ordinal_position ,is_nullable ,data_type, column_type 
+	FROM INFORMATION_SCHEMA.COLUMNS 
+	WHERE TABLE_NAME like ? ;
+	`, tableName)
 
 	if err != nil {
 		// handle this error better than this
@@ -87,6 +79,11 @@ func initializeDB(dbType, host, port, user, password, dbname, tableName string) 
 
 	defer rows.Close()
 	var totalAppendData string
+
+	fmt.Println("")
+	fmt.Println("---------------check type data---------------")
+	fmt.Println("")
+
 	for rows.Next() {
 		var columnName, columnType, dataType, isNullable, typeData string
 		var ordinalPosition int
@@ -174,13 +171,9 @@ func initializeDB(dbType, host, port, user, password, dbname, tableName string) 
 		parserNameType := appendString
 		parserJSONType := conv.LowerInitial(parserNameType)
 
-		fmt.Println("")
-		fmt.Println("---------------check type data---------------")
-		fmt.Println("")
-
 		fmt.Println(appendString)
 		fmt.Println(columnName, ordinalPosition, isNullable, dataType, columnType)
-		// appendData := fmt.Sprintf(columnName, ordinalPosition, isNullable, dataType, columnType)
+
 		appendData := fmt.Sprintf(tempStructData, parserNameType, typeData, parserJSONType, columnName)
 		totalAppendData = fmt.Sprintf("%s\n%s", totalAppendData, appendData)
 	}
@@ -193,4 +186,10 @@ func initializeDB(dbType, host, port, user, password, dbname, tableName string) 
 		totalStruct := fmt.Sprintf(autoStructData, totalAppendData)
 		fmt.Println(totalStruct)
 	}
+
+	elapsed := time.Since(start)
+
+	totalElapsedTime += elapsed
+	fmt.Println("\n query processing time %s \n", elapsed)
+
 }
