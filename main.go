@@ -11,10 +11,9 @@ import (
 
 	conv "github.com/dbstruct/convert"
 	"github.com/ghodss/yaml"
-	"github.com/mriskyp/dbstruct/model"
-
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	"github.com/mriskyp/dbstruct/model"
 )
 
 const (
