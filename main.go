@@ -2,14 +2,18 @@ package main
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"io/ioutil"
+	"log"
 	"strings"
 	"time"
 
 	conv "github.com/dbstruct/convert"
-
+	"github.com/ghodss/yaml"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	"github.com/mriskyp/dbstruct/model"
 )
 
 const (
@@ -21,15 +25,35 @@ const (
 )
 
 func main() {
-	dbHost := "10.107.224.23"
-	dbPort := "3306"
-	dbName := "lemonilo_staging"
-	dbUser := "administrator"
-	dbPassword := "T3ch*123*mysqlstaging*tw0"
-	dbType := "mysql"
-	tableName := "customers"
 
-	initializeDB(dbType, dbHost, dbPort, dbUser, dbPassword, dbName, tableName)
+	cfg, err := generateFromYml()
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Printf("\n data cfg %+v \n", cfg)
+	initializeDB(cfg.DBType, cfg.DBHost, cfg.DBPort, cfg.DBUser, cfg.DBPassword, cfg.DBName, cfg.TableName)
+}
+
+func generateFromYml() (*model.Config, error) {
+
+	data, err := ioutil.ReadFile("generate.yml")
+	if err != nil {
+		log.Fatalln(err)
+		return nil, errors.New("invalid yml config file")
+	}
+
+	var mapConfig map[string]model.Config
+
+	err = yaml.Unmarshal(data, &mapConfig)
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	configData := mapConfig["generate-dbstruct"]
+
+	// return data config
+	return &configData, nil
 }
 
 func initializeDB(dbType, host, port, user, password, dbname, tableName string) {

@@ -1,0 +1,8 @@
+generate-dbstruct:
+  dbHost : 10.107.224.23
+  dbPort : 3306
+  dbName : somedbname
+  dbUser : someuser
+  dbPassword : somepassword
+  dbType : somedbtype
+  tableName : somedbtablename
