@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	conv "dbstruct/converts"
+	conv "github.com/dbstruct/convert"
 
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"

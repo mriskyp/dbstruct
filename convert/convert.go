@@ -1,4 +1,4 @@
-package converts
+package convert
 
 import "unicode"
 
