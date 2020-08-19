@@ -9,10 +9,10 @@ import (
 	"strings"
 	"time"
 
-	conv "github.com/dbstruct/convert"
 	"github.com/ghodss/yaml"
 	_ "github.com/go-sql-driver/mysql"
 	_ "github.com/lib/pq"
+	conv "github.com/mriskyp/dbstruct/convert"
 	"github.com/mriskyp/dbstruct/model"
 )
 
