@@ -1,19 +1,9 @@
-# generate-dbstruct:
-#   dbHost : somehostt
-#   dbPort : someport
-#   dbName : somedbname
-#   dbUser : someuser
-#   dbPassword : somepassword
-#   dbType : somedbtype
-#   tableName : somedbtablename
-#   jsonFormat: somejsonformat
-
 generate-dbstruct:
-  dbHost : 10.107.224.23
-  dbPort : 3306
-  dbName : lemonilo_staging
-  dbUser : administrator
-  dbPassword : T3ch*123*mysqlstaging*tw0
-  dbType : mysql
-  tableName : customers
-  jsonFormat: underscore
+  dbHost : somehostt
+  dbPort : someport
+  dbName : somedbname
+  dbUser : someuser
+  dbPassword : somepassword
+  dbType : somedbtype
+  tableName : somedbtablename
+  jsonFormat: somejsonformat
