@@ -74,6 +74,11 @@ func initializeDB(cfg *model.Config) error {
 		return err
 	}
 
+	if cfg.JsonFormat == "" {
+		err = errors.New("no valid config json format found")
+		return err
+	}
+
 	isOpenDB := false
 	if cfg.DBType == postgresType {
 		psqlInfo := fmt.Sprintf("host=%s port=%d user=%s "+"password=%s dbname=%s sslmode=disable",
@@ -205,9 +210,15 @@ func initializeDB(cfg *model.Config) error {
 			}
 		}
 
+		/**
+		tempdata is store temporary for splitted column name
+		appendString is a builder to append formatting tempData
+		parserNameType is a string which will show as json name
+		parserJSONType is a string which will show as json type
+		*/
+		var tempData, appendString, parserNameType, parserJSONType string
+
 		splittedColumnName := strings.Split(columnName, "_")
-		var tempData string
-		var appendString string
 		if len(splittedColumnName) > 0 {
 			for i := 0; i < len(splittedColumnName); i++ {
 				tempData = conv.UpperInitial(splittedColumnName[i])
@@ -217,10 +228,18 @@ func initializeDB(cfg *model.Config) error {
 			appendString = conv.UpperInitial(dataType)
 		}
 
-		parserNameType := appendString
-		parserJSONType := conv.LowerInitial(parserNameType)
+		if cfg.JsonFormat == "underscore" {
+			parserJSONType = columnName
+		} else if cfg.JsonFormat == "camelcase" {
+			parserJSONType = conv.LowerInitial(appendString)
+		} else {
+			err = errors.New("json format not valid")
+			return err
+		}
+		parserNameType = appendString
+		// parserNameType = appendString
+		// parserJSONType = conv.LowerInitial(parserNameType)
 
-		fmt.Println(appendString)
 		fmt.Println(columnName, ordinalPosition, isNullable, dataType, columnType)
 
 		appendData := fmt.Sprintf(tempStructData, parserNameType, typeData, parserJSONType, columnName)
