@@ -15,7 +15,7 @@ make sure you have setup generate.yml which consists:
 ```
 generate-dbstruct:
   dbHost : somehost
-  dbPort : 3306
+  dbPort : someport
   dbName : somedbname
   dbUser : someuser
   dbPassword : somepassword
