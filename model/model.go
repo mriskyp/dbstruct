@@ -9,4 +9,5 @@ type Config struct {
 	DBType     string `yaml:"dbType"`
 	TableName  string `yaml:"tableName"`
 	JsonFormat string `yaml:"jsonFormat"`
+	StructName string `yaml:"structName"`
 }

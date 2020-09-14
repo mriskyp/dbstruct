@@ -6,4 +6,5 @@ generate-dbstruct:
   dbPassword : somepassword
   dbType : somedbtype
   tableName : somedbtablename
-  jsonFormat: somejsonformat
+  jsonFormat : somejsonformat
+  structName : someStructName
